@@ -114,10 +114,9 @@ Function Get-Base64Image ($Path) {
 	[Convert]::ToBase64String($pic)
 }
 
-$HeaderImg = Get-Base64Image ("$($StylePath)\Header.jpg")
-
-Function Get-CustomHTML ($Header){
-	$Report = $HTMLHeader -replace "_HEADER_", $Header
+Function Get-CustomHTML ($Header, $HeaderImg){
+    $Report = $HTMLHeader -replace "_HEADER_", $Header
+    $Report = $Report -replace "_HEADERIMG_", $HeaderImg
 	Return $Report
 }
 
@@ -126,11 +125,13 @@ Function Get-CustomHeader0 ($Title){
 	Return $Report
 }
 
-Function Get-CustomHeader ($Title, $Comments){
+Function Get-CustomHeader ($Title, $Comments, $Priority){
 	$Report = $CustomHeaderStart -replace "_TITLE_", $Title
+    $Report = $Report -replace "_PRIORITY_", $Priority
 	If ($Comments) {
 		$Report += $CustomheaderComments -replace "_COMMENTS_", $Comments
 	}
+
 	$Report += $CustomHeaderEnd
 	Return $Report
 }
@@ -181,7 +182,7 @@ $Plugins | Foreach {
 
 	If ($Details) {
 		If ($Display -eq "List"){
-			$MyReport += Get-CustomHeader $Header $Comments
+			$MyReport += Get-CustomHeader $Header $Comments $Priority
 			$AllProperties = $Details | Get-Member -MemberType Properties
 			$AllProperties | Foreach {
 				$MyReport += Get-HTMLDetail ($_.Name) ($Details.($_.Name))
@@ -189,10 +190,31 @@ $Plugins | Foreach {
 			$MyReport += Get-CustomHeaderClose			
 		}
 		If ($Display -eq "Table") {
-			$MyReport += Get-CustomHeader $Header $Comments
+			$MyReport += Get-CustomHeader $Header $Comments $Priority
 			$MyReport += Get-HTMLTable $Details
 			$MyReport += Get-CustomHeaderClose
 		}
+        
+        If ($Priority -eq "High" -or 1) {
+            $HighUniqueCount++
+            $HighCount = $HighCount + $Details.Count
+        }
+        ElseIf ($Priority -eq "Medium" -or 2) {
+            $MedUniqueCount++
+            $MedCount = $MedCount + $Details.Count
+        }
+        ElseIf ($Priority -eq "Low" -or 3) {
+            $LowUniqueCount++
+            $LowCount = $LowCount + $Details.Count
+        }
+        ElseIf ($Priority -eq "Info" -or 4) {
+            $InfoUniqueCount++
+            $InfoCount = $InfoCount + $Details.Count
+        }
+        Else {
+            $UnCatUniqueCount++
+            $UnCatCount = $UnCatCount + $Details.Count
+        }
 	}
 }	
 $MyReport += Get-CustomHeader ("This report took " + [math]::round(((Get-Date) - $Date).TotalMinutes,2) + " minutes to run all checks.") "The following plugins took longer than $PluginSeconds seconds to run, there may be a way to optimize these or remove them if not needed"

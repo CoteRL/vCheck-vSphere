@@ -108,6 +108,7 @@ Get-hypersnapshot($FullVM) | sort OverSize -Descending
 $Title = "Snapshots Oversize"
 $Header =  "Snapshots Oversize"
 $Comments = ""
+$Priority = "High"
 $Display = "Table"
 $Author = "Raphael Schitz"
 $PluginVersion = 1.1
